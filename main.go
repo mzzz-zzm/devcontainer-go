@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"database/sql"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -9,9 +11,13 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	db := setupDB()
+	defer db.Close()
+
 	r := setupRouter()
 	srv := &http.Server{
 		Addr:    ":9000",
@@ -37,7 +43,27 @@ func main() {
 	if err := srv.Shutdown(ctx); err != nil {
 		log.Fatal("Server forced to shutdown:", err)
 	}
+}
 
+func setupDB() *sql.DB {
+	connStr := os.Getenv("DATABASE_URL")
+	if connStr == "" {
+		log.Fatalln("DATABASE_URL environment variable not set")
+	}
+	db, err := sql.Open("postgres", connStr)
+	if err != nil {
+		log.Fatalf("Error opening database connection: %q", err)
+	}
+
+	// test the connection
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	if err := db.PingContext(ctx); err != nil {
+		log.Fatalf("Error pinging database: %q", err)
+	}
+	fmt.Println("Successfully connected to DB!")
+
+	return db
 }
 
 func setupRouter() *gin.Engine {
