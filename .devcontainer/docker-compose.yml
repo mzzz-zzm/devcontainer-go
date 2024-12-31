@@ -8,6 +8,8 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
+    depends_on:
+      - db
     env_file:
         # Ensure that the variables in .env match the same variables in devcontainer.json
         - .env
@@ -25,6 +27,7 @@ services:
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
   db:
+    container_name: postgres_container
     image: postgres:latest
     restart: unless-stopped
     volumes:
@@ -33,6 +36,13 @@ services:
       # Ensure that the variables in .env match the same variables in devcontainer.json
       - .env
 
+  pgadmin:
+    container_name: pgadmin4_container
+    image: dpage/pgadmin4:latest
+    restart: always
+    env_file:
+      # Ensure that the variables in .env match the same variables in devcontainer.json
+      - .env
 
     # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
     # (Adding the "ports" property to this file will not forward from a Codespace.)
