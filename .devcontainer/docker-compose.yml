@@ -5,6 +5,7 @@ volumes:
 
 services:
   app:
+    container_name: go_container
     build: 
       context: .
       dockerfile: Dockerfile
@@ -35,6 +36,13 @@ services:
     env_file:
       # Ensure that the variables in .env match the same variables in devcontainer.json
       - .env
+    command: >
+      sh -c "
+      docker-entrypoint.sh postgres &
+      sleep 10 &&
+      psql -U $POSTGRES_USER -c 'CREATE DATABASE example;' &&
+      wait
+      "
 
   pgadmin:
     container_name: pgadmin4_container
